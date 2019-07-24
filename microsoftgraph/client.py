@@ -1,7 +1,6 @@
 import base64
 import mimetypes
 import requests
-import json
 from microsoftgraph import exceptions
 from microsoftgraph.decorators import token_required
 from urllib.parse import urlencode, urlparse, quote_plus
@@ -17,7 +16,8 @@ class Client(object):
     OFFICE365_AUTH_ENDPOINT = '/oauth20_authorize.srf?'
     OFFICE365_TOKEN_ENDPOINT = '/oauth20_token.srf'
 
-    def __init__(self, client_id, client_secret, api_version='v1.0', account_type='common', office365=False):
+    def __init__(self, client_id, client_secret, account_id, api_version='v1.0', account_type='common', office365=False):
+        self.account_id = account_id
         self.client_id = client_id
         self.client_secret = client_secret
         self.api_version = api_version
@@ -298,7 +298,7 @@ class Client(object):
 
     @token_required
     def create_calendar_event(self, subject, content, start_datetime, start_timezone, end_datetime, end_timezone,
-                              location, calendar=None, **kwargs):
+                              attendees, location="", calendar=None):
         """
         Create a new calendar event.
 
@@ -311,21 +311,20 @@ class Client(object):
             end_timezone: in the format of Pacific Standard Time, string
             location:   string
             attendees: list of dicts of the form:
-                        {"emailAddress": {"address": a['attendees_email'],"name": a['attendees_name']}
+                        [{'email': 'email@example.com', 'name': 'John Doe', 'type': 'required'},...]
             calendar:
 
         Returns:
             A dict.
 
         """
-        # TODO: attendees
-        # attendees_list = [{
-        #     "emailAddress": {
-        #         "address": a['attendees_email'],
-        #         "name": a['attendees_name']
-        #     },
-        #     "type": a['attendees_type']
-        # } for a in kwargs['attendees']]
+        attendees_list = [{
+            "emailAddress": {
+                "address": a['email'],
+                "name": a['name']
+            },
+            "type": a['type']
+        } for a in attendees]
         body = {
             "subject": subject,
             "body": {
@@ -333,19 +332,20 @@ class Client(object):
                 "content": content
             },
             "start": {
-                "dateTime": start_datetime,
+                "dateTime": start_datetime.isoformat(),
                 "timeZone": start_timezone
             },
             "end": {
-                "dateTime": end_datetime,
+                "dateTime": end_datetime.isoformat(),
                 "timeZone": end_timezone
             },
             "location": {
                 "displayName": location
             },
-            # "attendees": attendees_list
+            "attendees": attendees_list
         }
-        url = 'me/calendars/{}/events'.format(calendar) if calendar is not None else 'me/events'
+        url = '/users/{}/calendar/events'.format(self.account_id) if calendar is None else \
+            '/users/{}/calendars/{}/events'.format(self.account_id, calendar)
         return self._post(self.base_url + url, json=body)
 
     @token_required
