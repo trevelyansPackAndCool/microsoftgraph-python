@@ -328,12 +328,61 @@ class Client(object):
             location:   string
             attendees: list of dicts of the form:
                         [{'email': 'email@example.com', 'name': 'John Doe', 'type': 'required'},...]
-            calendar:
-
+            calendar: The calendar the event is scheduled on
         Returns:
             A dict.
-
         """
+        event = Client.build_event_request(subject, content, start_datetime, start_timezone, end_datetime,
+                                           end_timezone, attendees, location)
+        url = '/users/{}/calendar/events'.format(self.account_id) if calendar is None else \
+            '/users/{}/calendars/{}/events'.format(self.account_id, calendar)
+        return self._post(self.base_url + url, json=event)
+
+    @token_required
+    def update_calendar_event(self, event_id, subject, content, start_datetime, start_timezone, end_datetime,
+                              end_timezone, attendees, location="", calendar=None):
+        """
+        Update an existing calendar event.
+
+        Args:
+            event_id: id of the calendar event
+            subject: subject of event, string
+            content: content of event, string
+            start_datetime: in the format of 2017-09-04T11:00:00, dateTimeTimeZone string
+            start_timezone: in the format of Pacific Standard Time, string
+            end_datetime: in the format of 2017-09-04T11:00:00, dateTimeTimeZone string
+            end_timezone: in the format of Pacific Standard Time, string
+            location:   string
+            attendees: list of dicts of the form:
+                        [{'email': 'email@example.com', 'name': 'John Doe', 'type': 'required'},...]
+            calendar: The calendar the event is scheduled on
+        Returns:
+            A dict.
+        """
+        event = Client.build_event_request(subject, content, start_datetime, start_timezone, end_datetime,
+                                           end_timezone, attendees, location)
+        url = '/users/{}/calendar/events/{}'.format(self.account_id, event_id) if calendar is None else \
+            '/users/{}/calendars/{}/events/{}'.format(self.account_id, calendar, event_id)
+        return self._patch(self.base_url + url, json=event)
+
+    @token_required
+    def delete_calendar_event(self, event_id, calendar=None):
+        """
+            Delete an existing calendar event.
+
+            Args:
+                event_id: id of the calendar event
+                calendar: The calendar the event is scheduled on
+            Returns:
+                A dict.
+            """
+        url = '/users/{}/calendar/events/{}'.format(self.account_id, event_id) if calendar is None else\
+            '/users/{}/calendars/{}/events/{}'.format(self.account_id, calendar, event_id)
+        return self._delete(self.base_url + url)
+
+    @staticmethod
+    def build_event_request(subject, content, start_datetime, start_timezone, end_datetime, end_timezone,
+                            attendees, location):
         attendees_list = [{
             "emailAddress": {
                 "address": a['email'],
@@ -341,7 +390,7 @@ class Client(object):
             },
             "type": a['type']
         } for a in attendees]
-        body = {
+        return {
             "subject": subject,
             "body": {
                 "contentType": "HTML",
@@ -360,9 +409,6 @@ class Client(object):
             },
             "attendees": attendees_list
         }
-        url = '/users/{}/calendar/events'.format(self.account_id) if calendar is None else \
-            '/users/{}/calendars/{}/events'.format(self.account_id, calendar)
-        return self._post(self.base_url + url, json=body)
 
     @token_required
     def create_calendar(self, name):
