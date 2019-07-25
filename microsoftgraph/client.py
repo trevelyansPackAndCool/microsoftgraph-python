@@ -1,10 +1,10 @@
 import base64
 import mimetypes
 import requests
-import json
 from microsoftgraph import exceptions
 from microsoftgraph.decorators import token_required
 from urllib.parse import urlencode, urlparse, quote_plus
+import msal
 
 
 class Client(object):
@@ -12,12 +12,15 @@ class Client(object):
     AUTH_ENDPOINT = '/oauth2/v2.0/authorize?'
     TOKEN_ENDPOINT = '/oauth2/v2.0/token'
     RESOURCE = 'https://graph.microsoft.com/'
+    SCOPE = ['https://graph.microsoft.com/.default']
 
     OFFICE365_AUTHORITY_URL = 'https://login.live.com'
     OFFICE365_AUTH_ENDPOINT = '/oauth20_authorize.srf?'
     OFFICE365_TOKEN_ENDPOINT = '/oauth20_token.srf'
 
-    def __init__(self, client_id, client_secret, api_version='v1.0', account_type='common', office365=False):
+    def __init__(self, client_id, client_secret, account_id, api_version='v1.0', account_type='common', office365=False,
+                 authenticate=False):
+        self.account_id = account_id
         self.client_id = client_id
         self.client_secret = client_secret
         self.api_version = api_version
@@ -27,6 +30,19 @@ class Client(object):
         self.token = None
         self.office365 = office365
         self.office365_token = None
+
+        if authenticate:
+            self.authenticate_for_app()
+
+    def authenticate_for_app(self):
+        authority = self.AUTHORITY_URL + self.account_type + self.TOKEN_ENDPOINT
+        token = msal.ConfidentialClientApplication(
+            self.client_id,
+            authority=authority,
+            client_credential=self.client_secret
+        ).acquire_token_for_client(scopes=self.SCOPE)
+
+        self.set_token(token)
 
     def authorization_url(self, redirect_uri, scope, state=None):
         """
@@ -298,7 +314,7 @@ class Client(object):
 
     @token_required
     def create_calendar_event(self, subject, content, start_datetime, start_timezone, end_datetime, end_timezone,
-                              location, calendar=None, **kwargs):
+                              attendees, location="", calendar=None):
         """
         Create a new calendar event.
 
@@ -311,42 +327,88 @@ class Client(object):
             end_timezone: in the format of Pacific Standard Time, string
             location:   string
             attendees: list of dicts of the form:
-                        {"emailAddress": {"address": a['attendees_email'],"name": a['attendees_name']}
-            calendar:
-
+                        [{'email': 'email@example.com', 'name': 'John Doe', 'type': 'required'},...]
+            calendar: The calendar the event is scheduled on
         Returns:
             A dict.
-
         """
-        # TODO: attendees
-        # attendees_list = [{
-        #     "emailAddress": {
-        #         "address": a['attendees_email'],
-        #         "name": a['attendees_name']
-        #     },
-        #     "type": a['attendees_type']
-        # } for a in kwargs['attendees']]
-        body = {
+        event = Client.build_event_request(subject, content, start_datetime, start_timezone, end_datetime,
+                                           end_timezone, attendees, location)
+        url = '/users/{}/calendar/events'.format(self.account_id) if calendar is None else \
+            '/users/{}/calendars/{}/events'.format(self.account_id, calendar)
+        return self._post(self.base_url + url, json=event)
+
+    @token_required
+    def update_calendar_event(self, event_id, subject, content, start_datetime, start_timezone, end_datetime,
+                              end_timezone, attendees, location="", calendar=None):
+        """
+        Update an existing calendar event.
+
+        Args:
+            event_id: id of the calendar event
+            subject: subject of event, string
+            content: content of event, string
+            start_datetime: in the format of 2017-09-04T11:00:00, dateTimeTimeZone string
+            start_timezone: in the format of Pacific Standard Time, string
+            end_datetime: in the format of 2017-09-04T11:00:00, dateTimeTimeZone string
+            end_timezone: in the format of Pacific Standard Time, string
+            location:   string
+            attendees: list of dicts of the form:
+                        [{'email': 'email@example.com', 'name': 'John Doe', 'type': 'required'},...]
+            calendar: The calendar the event is scheduled on
+        Returns:
+            A dict.
+        """
+        event = Client.build_event_request(subject, content, start_datetime, start_timezone, end_datetime,
+                                           end_timezone, attendees, location)
+        url = '/users/{}/calendar/events/{}'.format(self.account_id, event_id) if calendar is None else \
+            '/users/{}/calendars/{}/events/{}'.format(self.account_id, calendar, event_id)
+        return self._patch(self.base_url + url, json=event)
+
+    @token_required
+    def delete_calendar_event(self, event_id, calendar=None):
+        """
+            Delete an existing calendar event.
+
+            Args:
+                event_id: id of the calendar event
+                calendar: The calendar the event is scheduled on
+            Returns:
+                A dict.
+            """
+        url = '/users/{}/calendar/events/{}'.format(self.account_id, event_id) if calendar is None else\
+            '/users/{}/calendars/{}/events/{}'.format(self.account_id, calendar, event_id)
+        return self._delete(self.base_url + url)
+
+    @staticmethod
+    def build_event_request(subject, content, start_datetime, start_timezone, end_datetime, end_timezone,
+                            attendees, location):
+        attendees_list = [{
+            "emailAddress": {
+                "address": a['email'],
+                "name": a['name']
+            },
+            "type": a['type']
+        } for a in attendees]
+        return {
             "subject": subject,
             "body": {
                 "contentType": "HTML",
                 "content": content
             },
             "start": {
-                "dateTime": start_datetime,
+                "dateTime": start_datetime.isoformat(),
                 "timeZone": start_timezone
             },
             "end": {
-                "dateTime": end_datetime,
+                "dateTime": end_datetime.isoformat(),
                 "timeZone": end_timezone
             },
             "location": {
                 "displayName": location
             },
-            # "attendees": attendees_list
+            "attendees": attendees_list
         }
-        url = 'me/calendars/{}/events'.format(calendar) if calendar is not None else 'me/events'
-        return self._post(self.base_url + url, json=body)
 
     @token_required
     def create_calendar(self, name):
