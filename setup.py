@@ -17,5 +17,6 @@ setup(name='microsoftgraph-python',
       packages=['microsoftgraph'],
       install_requires=[
           'requests',
+          'msal==0.5.1'
       ],
       zip_safe=False)

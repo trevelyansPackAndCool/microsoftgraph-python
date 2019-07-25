@@ -4,6 +4,7 @@ import requests
 from microsoftgraph import exceptions
 from microsoftgraph.decorators import token_required
 from urllib.parse import urlencode, urlparse, quote_plus
+import msal
 
 
 class Client(object):
@@ -11,12 +12,14 @@ class Client(object):
     AUTH_ENDPOINT = '/oauth2/v2.0/authorize?'
     TOKEN_ENDPOINT = '/oauth2/v2.0/token'
     RESOURCE = 'https://graph.microsoft.com/'
+    SCOPE = ['https://graph.microsoft.com/.default']
 
     OFFICE365_AUTHORITY_URL = 'https://login.live.com'
     OFFICE365_AUTH_ENDPOINT = '/oauth20_authorize.srf?'
     OFFICE365_TOKEN_ENDPOINT = '/oauth20_token.srf'
 
-    def __init__(self, client_id, client_secret, account_id, api_version='v1.0', account_type='common', office365=False):
+    def __init__(self, client_id, client_secret, account_id, api_version='v1.0', account_type='common', office365=False,
+                 authenticate=False):
         self.account_id = account_id
         self.client_id = client_id
         self.client_secret = client_secret
@@ -27,6 +30,19 @@ class Client(object):
         self.token = None
         self.office365 = office365
         self.office365_token = None
+
+        if authenticate:
+            self.authenticate_for_app()
+
+    def authenticate_for_app(self):
+        authority = self.AUTHORITY_URL + self.account_type + self.TOKEN_ENDPOINT
+        token = msal.ConfidentialClientApplication(
+            self.client_id,
+            authority=authority,
+            client_credential=self.client_secret
+        ).acquire_token_for_client(scopes=self.SCOPE)
+
+        self.set_token(token)
 
     def authorization_url(self, redirect_uri, scope, state=None):
         """
