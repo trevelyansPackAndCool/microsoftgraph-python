@@ -73,13 +73,12 @@ class Client(object):
         self.requests_hooks = requests_hooks
 
     def authenticate_for_app(self):
-        authority = self.AUTHORITY_URL + self.account_type + self.TOKEN_ENDPOINT
+        authority = f"{self.AUTHORITY_URL}{self.account_type}/"
         token = msal.ConfidentialClientApplication(
             self.client_id,
             authority=authority,
             client_credential=self.client_secret
         ).acquire_token_for_client(scopes=self.TOKEN_SCOPES)
-
         self.set_token(token)
 
     def authorization_url(self, redirect_uri: str, scope: list, state: str = None) -> str:

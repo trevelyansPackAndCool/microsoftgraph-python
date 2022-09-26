@@ -101,8 +101,8 @@ class Calendar(object):
             online_meeting_provider,
             **kwargs
         )
-        url = f"/users/{self.account_id}/calendars/{calendar_id}/events" if calendar_id is not None \
-            else f"/users/{self.account_id}/calendar/events"
+        url = f"/users/{self._client.account_id}/calendars/{calendar_id}/events" if calendar_id is not None \
+            else f"/users/{self._client.account_id}/calendar/events"
         return self._client._post(self._client.base_url + url, json=body)
 
     @token_required
@@ -160,8 +160,8 @@ class Calendar(object):
             online_meeting_provider,
             **kwargs
         )
-        url = f"/users/{self.account_id}/calendars/{calendar_id}/events/{event_id}" if calendar_id is not None \
-            else f"/users/{self.account_id}/calendar/events/{event_id}"
+        url = f"/users/{self._client.account_id}/calendars/{calendar_id}/events/{event_id}" if calendar_id is not None \
+            else f"/users/{self._client.account_id}/calendar/events/{event_id}"
         return self._client._patch(self._client.base_url + url, json=body)
 
     @token_required
@@ -252,8 +252,8 @@ class Calendar(object):
             Returns:
                 Response: Microsoft Graph Response.
             """
-        url = f"/users/{self.account_id}/calendars/{calendar_id}/events/{event_id}" if calendar_id is not None \
-            else f"/users/{self.account_id}/calendar/events/{event_id}"
+        url = f"/users/{self._client.account_id}/calendars/{calendar_id}/events/{event_id}" if calendar_id is not None \
+            else f"/users/{self._client.account_id}/calendar/events/{event_id}"
         return self._client._delete(self._client.base_url + url)
 
     @token_required
