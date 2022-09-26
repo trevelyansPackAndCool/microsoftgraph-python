@@ -27,6 +27,13 @@ See [Get access on behalf of a user](https://docs.microsoft.com/en-us/graph/auth
 ```
 pip install microsoftgraph-python
 ```
+If you have an issue installing `cffi` (a requirement of `msal`) due to missing `Python.h` header file, then install
+`python3-dev` if on Linux, or set your `C_INCLUDE_PATH` on Mac.
+
+Eg.
+```
+export C_INCLUDE_PATH=/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/include/python3.8
+```
 ## Usage
 ### Client instantiation
 ```

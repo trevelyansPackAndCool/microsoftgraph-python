@@ -19,6 +19,7 @@ setup(
     packages=["microsoftgraph"],
     install_requires=[
         "requests",
+        "msal==1.19.0",
     ],
     zip_safe=False,
 )

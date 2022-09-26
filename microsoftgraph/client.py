@@ -1,6 +1,7 @@
 from typing import Optional
 from urllib.parse import urlencode
 
+import msal
 import requests
 
 from microsoftgraph import exceptions
@@ -19,12 +20,14 @@ class Client(object):
     AUTHORITY_URL = "https://login.microsoftonline.com/"
     AUTH_ENDPOINT = "/oauth2/v2.0/authorize?"
     TOKEN_ENDPOINT = "/oauth2/v2.0/token"
+    TOKEN_SCOPES = ["https://graph.microsoft.com/.default"]
     RESOURCE = "https://graph.microsoft.com/"
 
     def __init__(
         self,
         client_id: str,
         client_secret: str,
+        account_id: str,
         api_version: str = "v1.0",
         account_type: str = "common",
         requests_hooks: dict = None,
@@ -35,6 +38,7 @@ class Client(object):
         Args:
             client_id (str): Application client id.
             client_secret (str): Application client secret.
+            account_id (str): Application account id.
             api_version (str, optional): v1.0 or beta. Defaults to "v1.0".
             account_type (str, optional): common, organizations or consumers. Defaults to "common".
             requests_hooks (dict, optional): Requests library event hooks. Defaults to None.
@@ -44,6 +48,7 @@ class Client(object):
         """
         self.client_id = client_id
         self.client_secret = client_secret
+        self.account_id = account_id
         self.api_version = api_version
         self.account_type = account_type
 
@@ -66,6 +71,16 @@ class Client(object):
                 'requests_hooks must be a dict. e.g. {"response": func}. http://docs.python-requests.org/en/master/user/advanced/#event-hooks'
             )
         self.requests_hooks = requests_hooks
+
+    def authenticate_for_app(self):
+        authority = self.AUTHORITY_URL + self.account_type + self.TOKEN_ENDPOINT
+        token = msal.ConfidentialClientApplication(
+            self.client_id,
+            authority=authority,
+            client_credential=self.client_secret
+        ).acquire_token_for_client(scopes=self.TOKEN_SCOPES)
+
+        self.set_token(token)
 
     def authorization_url(self, redirect_uri: str, scope: list, state: str = None) -> str:
         """Generates an Authorization URL.
