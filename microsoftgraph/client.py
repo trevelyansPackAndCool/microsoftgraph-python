@@ -8,6 +8,7 @@ from microsoftgraph import exceptions
 from microsoftgraph.calendar import Calendar
 from microsoftgraph.contacts import Contacts
 from microsoftgraph.files import Files
+from microsoftgraph.groups import Groups
 from microsoftgraph.mail import Mail
 from microsoftgraph.notes import Notes
 from microsoftgraph.response import Response
@@ -60,6 +61,7 @@ class Client(object):
         self.calendar = Calendar(self)
         self.contacts = Contacts(self)
         self.files = Files(self)
+        self.groups = Groups(self)
         self.mail = Mail(self)
         self.notes = Notes(self)
         self.users = Users(self)
