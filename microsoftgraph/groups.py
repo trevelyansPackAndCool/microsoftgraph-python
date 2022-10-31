@@ -29,7 +29,8 @@ class Groups(object):
         Returns:
             Response: Microsoft Graph Response.
         """
-        return self._client._get(self._client.base_url + "groups", params=params)
+        headers = {'ConsistencyLevel': 'eventual'}  # Enable advanced filtering
+        return self._client._get(self._client.base_url + "groups", params=params, headers=headers)
 
     @token_required
     def list_group_members(self, group_id: str, params: dict = None) -> Response:
