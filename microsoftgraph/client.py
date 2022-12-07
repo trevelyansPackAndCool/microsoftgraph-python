@@ -8,8 +8,10 @@ from microsoftgraph import exceptions
 from microsoftgraph.calendar import Calendar
 from microsoftgraph.contacts import Contacts
 from microsoftgraph.files import Files
+from microsoftgraph.groups import Groups
 from microsoftgraph.mail import Mail
 from microsoftgraph.notes import Notes
+from microsoftgraph.org_contacts import OrgContacts
 from microsoftgraph.response import Response
 from microsoftgraph.users import Users
 from microsoftgraph.webhooks import Webhooks
@@ -60,8 +62,10 @@ class Client(object):
         self.calendar = Calendar(self)
         self.contacts = Contacts(self)
         self.files = Files(self)
+        self.groups = Groups(self)
         self.mail = Mail(self)
         self.notes = Notes(self)
+        self.org_contacts = OrgContacts(self)
         self.users = Users(self)
         self.webhooks = Webhooks(self)
         self.workbooks = Workbooks(self)
@@ -258,7 +262,7 @@ class Client(object):
     def _delete(self, url, **kwargs):
         return self._request("DELETE", url, **kwargs)
 
-    def _request(self, method, url, headers=None, **kwargs) -> Response:
+    def _request(self, method, url, headers=None, advanced_filtering=False, **kwargs) -> Response:
         _headers = {
             "Accept": "application/json",
         }
@@ -267,6 +271,8 @@ class Client(object):
             _headers.update(headers)
         if self.requests_hooks:
             kwargs.update({"hooks": self.requests_hooks})
+        if advanced_filtering:
+            _headers["ConsistencyLevel"] = "eventual"
         if "Content-Type" not in _headers:
             _headers["Content-Type"] = "application/json"
         return self._parse(requests.request(method, url, headers=_headers, **kwargs))

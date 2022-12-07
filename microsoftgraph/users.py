@@ -30,3 +30,18 @@ class Users(object):
             Response: Microsoft Graph Response.
         """
         return self._client._get(self._client.base_url + "me", params=params)
+
+    @token_required
+    def get_all_users(self, params: dict = None) -> Response:
+        """Retrieve a list of all users
+
+        Users
+        https://learn.microsoft.com/en-us/graph/api/user-list?view=graph-rest-1.0&tabs=http
+
+        Args:
+            params (dict, optional): Query. Defaults to None.
+
+        Returns:
+            Response: Microsoft Graph Response.
+        """
+        return self._client._get(self._client.base_url + "/users", params=params, advanced_filtering=True)
