@@ -12,6 +12,7 @@ from microsoftgraph.groups import Groups
 from microsoftgraph.mail import Mail
 from microsoftgraph.notes import Notes
 from microsoftgraph.org_contacts import OrgContacts
+from microsoftgraph.sharepoint import SharePoint
 from microsoftgraph.response import Response
 from microsoftgraph.users import Users
 from microsoftgraph.webhooks import Webhooks
@@ -66,6 +67,7 @@ class Client(object):
         self.mail = Mail(self)
         self.notes = Notes(self)
         self.org_contacts = OrgContacts(self)
+        self.sharepoint = SharePoint(self)
         self.users = Users(self)
         self.webhooks = Webhooks(self)
         self.workbooks = Workbooks(self)
