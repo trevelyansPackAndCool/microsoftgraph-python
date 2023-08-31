@@ -29,13 +29,29 @@ class SharePoint(object):
         return self._client._get(f'{self.base_url}drives/', params=params)
 
     @token_required
-    def get_drive_items(self, drive_id: str, params: dict = None) -> Response:
-        return self._client._get(f'{self.base_url}drives/{drive_id}/items/root/children', params=params)
+    def get_drive_items(self, drive_id: str, item_id: str = None, params: dict = None) -> Response:
+        return self._client._get(f'{self.base_url}drives/{drive_id}/items/{item_id or "root"}/children', params=params)
 
     @token_required
     def get_item_children(self, item_id: str, params: dict = None) -> Response:
         return self._client._get(f'{self.base_url}drive/items/{item_id}/children', params=params)
 
     @token_required
-    def get_item_contents(self, item_id: str, params: dict = None) -> Response:
-        return self._client._get(f'{self.base_url}drive/items/{item_id}/content', params=params)
+    def get_item(self, drive_id: str, item_id: str, params: dict = None) -> Response:
+        return self._client._get(f'{self.base_url}drives/{drive_id}/items/{item_id}', params=params)
+
+    @token_required
+    def get_item_contents(self, drive_id: str, item_id: str, params: dict = None) -> Response:
+        return self._client._get(f'{self.base_url}drives/{drive_id}/items/{item_id}/content', params=params)
+
+    @token_required
+    def get_lists(self, params: dict = None) -> Response:
+        return self._client._get(f'{self.base_url}lists', params=params)
+
+    @token_required
+    def get_list_items(self, list_id: str, params: dict = None) -> Response:
+        return self._client._get(f'{self.base_url}lists/{list_id}/items/', params=params)
+    
+    @token_required
+    def get_list_item(self, list_id: str, item_id: str, params: dict = None) -> Response:
+        return self._client._get(f'{self.base_url}lists/{list_id}/items/{item_id}', params=params)
