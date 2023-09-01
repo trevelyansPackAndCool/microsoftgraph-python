@@ -26,32 +26,46 @@ class SharePoint(object):
 
     @token_required
     def get_drives(self, params: dict = None) -> Response:
+        """
+        Lists all Drives available in the SharePoint site.
+
+        https://learn.microsoft.com/en-us/graph/api/drive-list?view=graph-rest-1.0&tabs=http#list-a-sites-drives
+        """
         return self._client._get(f'{self.base_url}drives/', params=params)
 
     @token_required
-    def get_drive_items(self, drive_id: str, item_id: str = None, params: dict = None) -> Response:
-        return self._client._get(f'{self.base_url}drives/{drive_id}/items/{item_id or "root"}/children', params=params)
-
-    @token_required
-    def get_item_children(self, item_id: str, params: dict = None) -> Response:
-        return self._client._get(f'{self.base_url}drive/items/{item_id}/children', params=params)
-
-    @token_required
-    def get_item(self, drive_id: str, item_id: str, params: dict = None) -> Response:
-        return self._client._get(f'{self.base_url}drives/{drive_id}/items/{item_id}', params=params)
-
-    @token_required
-    def get_item_contents(self, drive_id: str, item_id: str, params: dict = None) -> Response:
-        return self._client._get(f'{self.base_url}drives/{drive_id}/items/{item_id}/content', params=params)
-
-    @token_required
     def get_lists(self, params: dict = None) -> Response:
+        """
+        Gets all lists in the site. Returns a collection of list resources.
+
+        https://learn.microsoft.com/en-us/graph/api/list-list?view=graph-rest-1.0&tabs=http
+        """
         return self._client._get(f'{self.base_url}lists', params=params)
 
     @token_required
-    def get_list_items(self, list_id: str, params: dict = None) -> Response:
-        return self._client._get(f'{self.base_url}lists/{list_id}/items/', params=params)
-    
+    def get_drive_items(self, drive_id: str, item_id: str = None, params: dict = None) -> Response:
+        """
+        Lists all items in the Drive. Returns a collection of driveItems resources.
+        If item_id is provided, lists all items in the folder. Otherwise lists all items in the root folder.
+
+        https://learn.microsoft.com/en-us/graph/api/driveitem-list-children?view=graph-rest-1.0&tabs=http
+        """
+        return self._client._get(f'{self.base_url}drives/{drive_id}/items/{item_id or "root"}/children', params=params)
+
     @token_required
-    def get_list_item(self, list_id: str, item_id: str, params: dict = None) -> Response:
-        return self._client._get(f'{self.base_url}lists/{list_id}/items/{item_id}', params=params)
+    def get_list_items(self, list_id: str, params: dict = None) -> Response:
+        """
+        Gets all items in the list. Returns a collection of listItem resources.
+
+        https://learn.microsoft.com/en-us/graph/api/listitem-list?view=graph-rest-1.0&tabs=http
+        """
+        return self._client._get(f'{self.base_url}lists/{list_id}/items/', params=params)
+
+    @token_required
+    def get_item_contents(self, drive_id: str, item_id: str, params: dict = None) -> Response:
+        """
+        Downloads the contents of the specified driveItem. Only driveItems with the file property can be downloaded.
+
+        https://learn.microsoft.com/en-us/graph/api/driveitem-get-content?view=graph-rest-1.0&tabs=http
+        """
+        return self._client._get(f'{self.base_url}drives/{drive_id}/items/{item_id}/content', params=params)
