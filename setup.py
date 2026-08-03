@@ -8,7 +8,7 @@ def read(fname):
 
 setup(
     name="microsoftgraph-python",
-    version="1.2.0",
+    version="1.3.0",
     description="API wrapper for Microsoft Graph written in Python",
     long_description=read("README.md"),
     url="https://github.com/GearPlug/microsoftgraph-python",
@@ -19,7 +19,7 @@ setup(
     packages=["microsoftgraph"],
     install_requires=[
         "requests",
-        "msal==1.19.0",
+        "msal>=1.37.0,<2",
     ],
     zip_safe=False,
 )
